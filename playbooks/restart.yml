@@ -1,0 +1,10 @@
+- name: Restart OpenVPN
+  # ========================================================
+  hosts: "{{ cmd_hosts | default('openvpn') }}"
+  become: true
+
+  roles:
+    - restart
+#
+# ========================================================
+# sudo ansible-playbook playbooks/restart.yml -i inventories/cassiopee/hosts.ini

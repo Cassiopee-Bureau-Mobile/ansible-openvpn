@@ -1,0 +1,3 @@
+---
+- name: OpenVPN | Restart OpenVPN
+  shell: systemctl restart openvpn
