@@ -9,7 +9,7 @@
 
 - name: OpenVPN | PKI | Make local destination folder
   local_action: file path={{ local_creds_folder }}/ state=directory
-  become: False
+  become: true
 
 - name: OpenVPN | PKI | Generate a random server common name
   shell: grep -v -P "[\x80-\xFF]" {{ path_dict }} | sed -e "s/'//" | shuf -n 2 | xargs | sed -e 's/ /./g' | cut -c 1-64 > {{ openvpn_server_common_name_file }}
@@ -40,7 +40,7 @@
     line: "ca_password: {{ ca_password_result.stdout }}"
     path: "{{ inventory_dir }}/host_vars/{{inventory_hostname}}.yml"
     create: true
-  become: False
+  become: true
   when: ca_password is not defined
 
 - name: OpenVPN | PKI | Set CA password variable
@@ -84,8 +84,8 @@
   expect:
     command: ./easyrsa build-ca --req-cn "ca@{{ openvpn_server_common_name }}"
     responses:
-      'Enter PEM pass phrase:$': "{{ ca_password }}"
-      'Verifying - Enter PEM pass phrase:$': "{{ ca_password }}"
+      "Enter PEM pass phrase:$": "{{ ca_password }}"
+      "Verifying - Enter PEM pass phrase:$": "{{ ca_password }}"
     chdir: "{{ openvpn_path_easyrsa }}"
     creates: "{{ openvpn_path_easyrsa }}/pki/private/ca.key"
 
@@ -93,7 +93,7 @@
   expect:
     command: ./easyrsa gen-crl
     responses:
-      'Enter pass phrase for .*?:$': "{{ ca_password }}"
+      "Enter pass phrase for .*?:$": "{{ ca_password }}"
     chdir: "{{ openvpn_path_easyrsa }}"
     creates: "{{ openvpn_crl }}"
 
@@ -101,7 +101,7 @@
   expect:
     command: ./easyrsa build-server-full "server@{{ openvpn_server_common_name }}" nopass --req-cn "server@{{ openvpn_server_common_name }}"
     responses:
-      'Enter pass phrase for .*?:$': "{{ ca_password }}"
+      "Enter pass phrase for .*?:$": "{{ ca_password }}"
     chdir: "{{ openvpn_path_easyrsa }}"
     creates: "{{ path_server_key }}"
 

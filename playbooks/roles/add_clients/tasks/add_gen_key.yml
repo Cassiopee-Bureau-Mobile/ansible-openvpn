@@ -40,15 +40,20 @@
   expect:
     command: ./easyrsa build-client-full "{{ item[0] }}" --req-cn "{{ item[0] }}"
     responses:
-      'Enter PEM pass phrase:$': "{{ item[1].stdout }}"
-      'Verifying - Enter PEM pass phrase:$': "{{ item[1].stdout }}"
-      'Enter pass phrase for .*?:$': "{{ ca_password }}"
+      "Enter PEM pass phrase:$": "{{ item[1].stdout }}"
+      "Verifying - Enter PEM pass phrase:$": "{{ item[1].stdout }}"
+      "Enter pass phrase for .*?:$": "{{ ca_password }}"
     chdir: "{{ openvpn_path_easyrsa }}"
     creates: "{{ openvpn_path_keys }}/{{ item[0] }}.key"
   no_log: true
   with_together:
     - "{{ clients_to_add }}"
     - "{{ client_pk_passwords.results }}"
+
+- name: OpenVPN | Add Clients | Remove passphrase from client keys
+  shell: openssl rsa -in "{{ openvpn_path_keys }}/{{ item }}.key" -out "{{ openvpn_path_keys }}/{{ item }}.key" -passin pass:"{{ client_pk_passwords.results[0].stdout }}"
+  with_items: "{{ clients_to_add }}"
+  when: "client_pk_passwords_local.results[0].stat.exists == False"
 
 - name: OpenVPN | Add Clients | Make client configuration directory
   file:
