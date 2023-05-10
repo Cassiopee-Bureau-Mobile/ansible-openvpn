@@ -1,7 +1,11 @@
 - name: Add clients to OpenVPN's PKI
-# ========================================================
+  # ========================================================
   # Allows caller to override hosts using '-e cmd_hosts='
   hosts: "{{ cmd_hosts | default('openvpn') }}"
+  become: true
 
   roles:
     - add_clients
+#
+# ========================================================
+# sudo ansible-playbook playbooks/add_clients.yml -i inventories/cassiopee/hosts.ini -e 'clients_to_add=["client2"]'

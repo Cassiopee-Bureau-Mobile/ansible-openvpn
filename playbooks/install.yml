@@ -1,15 +1,16 @@
 - name: Install required software, configure and harden
-# ========================================================
+  # ========================================================
   hosts: "{{ cmd_hosts | default('openvpn') }}"
+  become: true
 
-# You need a python interpreter first, so skip gathering facts, then use
-# 'setup:' to get them after the python 2 interpreter has been installed.
-# See 'pre_tasks' below
-  gather_facts: no
+  # You need a python interpreter first, so skip gathering facts, then use
+  # 'setup:' to get them after the python 2 interpreter has been installed.
+  # See 'pre_tasks' below
+  gather_facts: false
   pre_tasks:
     # If python doesn't exist on path (type returns non-zero), install python
     - name: OpenVPN | install | Install python3 if necessary
-      raw: 'type python >/dev/null 2>&1 || apt-get -y install python3-minimal'
+      raw: "type python >/dev/null 2>&1 || apt-get -y install python3-minimal"
       changed_when: false
 
     - name: OpenVPN | install | Gather facts after python3 is available
@@ -17,3 +18,6 @@
 
   roles:
     - openvpn
+#
+# ========================================================
+# sudo ansible-playbook playbooks/install.yml -i inventories/cassiopee/hosts.ini

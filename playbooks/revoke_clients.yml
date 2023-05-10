@@ -1,7 +1,11 @@
 - name: Revoke client access
-# ========================================================
+  # ========================================================
   # Allows caller to override hosts using '-e cmd_hosts='
   hosts: "{{ cmd_hosts | default('openvpn') }}"
+  become: true
 
   roles:
     - revoke_clients
+#
+# ========================================================
+# sudo ansible-playbook playbooks/revoke_clients.yml -i inventories/cassiopee/hosts.ini -e 'clients_to_revoke=["client2"]'
