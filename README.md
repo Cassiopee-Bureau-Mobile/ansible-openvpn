@@ -1,4 +1,10 @@
-# ansible-openvpn [![Build Status](https://travis-ci.org/BastiPaeltz/ansible-openvpn.svg?branch=master)](https://travis-ci.org/BastiPaeltz/ansible-openvpn)
+# This Repo is only for private use because it fit with specific needs.
+
+I made some changes to the original repo to fit my needs. I will try to keep it up to date with the original repo.
+I also remove the `sync_clients.yml` playbook because I don't need it.
+I add become to the playbooks because I run it on a fresh installed system.
+
+# ansible-openvpn
 
 Ansible role and playbooks for installing openvpn and managing clients.
 
