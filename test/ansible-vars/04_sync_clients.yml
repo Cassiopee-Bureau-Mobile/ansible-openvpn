@@ -1,6 +1,0 @@
-valid_clients:
-- "testuser1@{{openvpn_server_common_name}}"
-- testuser1
-- testuser5
-
-prompt_before_syncing_clients: False
