@@ -1,6 +1,3 @@
 fetched_creds
 *.retry
-/inventories
-test/host_vars
-test/group_vars
-test/docker-inventory
+**/host_vars/*

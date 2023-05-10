@@ -10,6 +10,7 @@ It is however more geared towards configuring a complete system. It is basically
 This project is about setting up openvpn on any kind of system and touching only the parts that are necessary by making as few as possible assumptions about your system / not messing with your current configuration while keeping almost all the cool features found in ansible-openvpn-hardened.
 
 Features kept:
+
 - setting up a OpenVPN PKI using easyrsa3 with certificate revokation, DH parameters and HMAC
 - generates [multiple OpenVPN client configurations](#Distributing-key-files)
 - support for [certificate signing request](#Adding-clients-using-a-CSR)
@@ -19,12 +20,13 @@ Features kept:
 - CA password is not stored on the OpenVPN host
 
 Features this project adds to that:
-- [Client state syncing](#Client-state-syncing) (optional)
+
 - support for running on and managing multiple hosts at once
 - support for names (CA, clients) with whitespace
 - made more things configurable, e.g. setting the DN_mode or the OpenVPN CN or adding arbitrary OpenVPN configuration to server and/or clients
 
 Things I stripped from ansible-openvpn-hardened, because they are not directly related to OpenVPN or might not be desired by users who run this on existing systems. So this project wil **NOT**:
+
 - upgrade all packages and install software to periodically update them
 - remove any of the installed packages
 - install dnsmasq
@@ -33,6 +35,7 @@ Things I stripped from ansible-openvpn-hardened, because they are not directly r
 - install auditd, aide or any other software used for hardening or auditing
 
 Features still to come:
+
 - more configuration options for openvpn
 - IPv6 support
 
@@ -57,7 +60,7 @@ Copy the sample Ansible inventory and variables to edit for your setup. (I will 
 Edit the inventory hosts (`hosts.ini`) to target your desired host. You can also change the [configuration variables](#configuration-variables) in (`group_vars/all.yml`), the defaults are however sufficient for this quickstart example.
 It is also possible to [target multiple hosts each using different variables](#targeting-multiple-hosts).
 
-OpenVPN requires some firewall rules to forward packets. By default **NO** firewall rules will be written/altered.  
+OpenVPN requires some firewall rules to forward packets. By default firewall rules will be written/altered.  
 However you can set `load_iptables_rules` to `true` and a [generated script](./playbooks/roles/openvpn/templates/etc_iptables_rules.v4.j2), that you can find at `/etc/openvpn/openvpn_iptables_rules.sh` on the host (after installation finished) will load the minimum required rules into ip(v4)tables. If you opt to not do this you can set the firewall rules by hand. OpenVPN will need at least the `MASQUERADE` rule from that script to work.
 
 Run the install playbook
@@ -71,7 +74,7 @@ The OpenVPN server is now up and running. Time to add some clients.
 When you run the `sync_clients.yml` playboook it will sync the desired state (which clients are in the `valid_clients` list, by default "phone" and "laptop") with the current state (which clients are currently valid on the OpenVPN host).  
 Clients that are not desired but currently valid will be revoked.  
 Clients that are desired but currently not present on the OpenVPN host will be created/added.  
-**NOTE**: Once you revoke a client, it is NOT possible to make it valid again, so I suggest using somewhat unique names as `valid_clients`.  
+**NOTE**: Once you revoke a client, it is NOT possible to make it valid again, so I suggest using somewhat unique names as `valid_clients`.
 
 By default once you run the `sync_clients.yml` playbook it will first tell you which clients it will add and revoke before doing it, you will have to manually confirm before it proceeds. You can disable this prompt by setting `prompt_before_syncing_clients` to `false`.
 
@@ -124,13 +127,13 @@ Entering a pass phrase every time the client is started can be annoying. There a
 
 1. When starting the client, use `openvpn --config [config] --askpass [pass.txt]` if you don't want to enter the password for the private key
 
-  From the OpenVPN man page:
+From the OpenVPN man page:
 
-  > If file is specified, read the password from the first line of file. Keep in mind that storing your password in a file to a certain extent invalidates the extra security provided by using an encrypted key.
+> If file is specified, read the password from the first line of file. Keep in mind that storing your password in a file to a certain extent invalidates the extra security provided by using an encrypted key.
 
 ### Adding clients using a CSR
 
-Clients can also be added using a certificate signing request, CSR. This is useful if you intend to use keys generated and stored in a TPM. Generating the CSR will depend on your hardware, OS, TPM software, etc. If you're interested in this feature, you can probably figure this out (though [`.travis.yml`](.travis.yml) has an example of generating a CSR with *openssl*). This [blog post](https://qistoph.blogspot.nl/2015/12/tpm-authentication-in-openvpn-and-putty.html) shows how to create private key stored in a TPM and generate a CSR on Windows.
+Clients can also be added using a certificate signing request, CSR. This is useful if you intend to use keys generated and stored in a TPM. Generating the CSR will depend on your hardware, OS, TPM software, etc. If you're interested in this feature, you can probably figure this out (though [`.travis.yml`](.travis.yml) has an example of generating a CSR with _openssl_). This [blog post](https://qistoph.blogspot.nl/2015/12/tpm-authentication-in-openvpn-and-putty.html) shows how to create private key stored in a TPM and generate a CSR on Windows.
 
 The variable `csr_path` specifies the local path to the CSR. `cn` specifies the common name specified when the CSR was created.
 
@@ -139,9 +142,11 @@ The variable `csr_path` specifies the local path to the CSR. `cn` specifies the 
 This will generate the client's signed certificate and put it in `fetched_creds/[server ip]/[cn]/` as well as a nearly complete `.ovpn` client configuration file. You'll need to add references to or embed your private key and signed certificate. This will vary based on how your private key is stored. If your following the guide in the blog post mentioned above you'd do this using the OpenVPN option `cryptoapicert`.
 
 ## Targeting multiple hosts
+
 It is possible to not only target multiple hosts but also use different groups and apply certain configuration variables to that group only. An example:
 
 Consider this `hosts.ini` inventory:
+
 ```
 [production]
 bastion-prod-us-east-1
@@ -156,6 +161,7 @@ qa
 ```
 
 You can now create a file `production.yml` in `group_vars/`:
+
 ```
 openvpn_key_country:  "US"
 openvpn_key_province: "Ohio"
@@ -168,6 +174,7 @@ openvpn_key_email: "foobar@example.com"
 This configuration will now be applied to hosts in the `production` group only and will override variables from the `all.yml`.  
 You can even do this on a per-host level, which will override group-level variables.  
 E.g. create a file `host_vars/bastion-prod-us-east-1.yml`:
+
 ```
 openvpn_key_ou: "Operations Unit B"
 ```
@@ -179,7 +186,8 @@ This also comes in handy when managing clients with the `sync_clients.yml` playb
 ## How to manage state
 
 You can use this to manage state by committing and continously updating configuration, especially for client syncing.
-There are different approaches you can take, here are two suggestions:  
+There are different approaches you can take, here are two suggestions:
+
 - Manage all configuration files (all `inventories/` files) on a separate location, e.g. inside of [Jenkins](https://wiki.jenkins.io/display/JENKINS/Config+File+Provider+Plugin) and once these change, trigger a run of the playbook(s), especially `sync_clients.yml`. Disadvantage: You can not easily run this from anywhere else since the configuration files are missing.
 - Encrypt all configuration files (e.g. using `ansible-vault`), commit them to source control and trigger a run of the playbook(s) after a new commit is pushed.
 
@@ -196,8 +204,11 @@ To revoke clients access, you can run the `revoke_clients.yml` playbook. It need
 There is documentation on the most important variables in [all.yml](./inventories/sample/group_vars/all.yml).
 
 ### OpenVPN server configuration
+
 For the full server configuration, see [`etc_openvpn_server.conf.j2`](playbooks/roles/openvpn/templates/etc_openvpn_server.conf.j2)
-- `tls-auth` aids in mitigating risk of denial-of-service attacks. Additionally, when combined with usage of UDP at the transport layer (the default configuration used by *ansible-openvpn-hardened*), it complicates attempts to port scan the OpenVPN server because any unsigned packets can be immediately dropped without sending anything back to the scanner.
+
+- `tls-auth` aids in mitigating risk of denial-of-service attacks. Additionally, when combined with usage of UDP at the transport layer (the default configuration used by _ansible-openvpn-hardened_), it complicates attempts to port scan the OpenVPN server because any unsigned packets can be immediately dropped without sending anything back to the scanner.
+
   - From the [OpenVPN hardening guide](https://community.openvpn.net/openvpn/wiki/Hardening):
 
     > The tls-auth option uses a static pre-shared key (PSK) that must be generated in advance and shared among all peers. This features adds "extra protection" to the TLS channel by requiring that incoming packets have a valid signature generated using the PSK key... The primary benefit is that an unauthenticated client cannot cause the same CPU/crypto load against a server as the junk traffic can be dropped much sooner. This can aid in mitigating denial-of-service attempts.
@@ -205,22 +216,26 @@ For the full server configuration, see [`etc_openvpn_server.conf.j2`](playbooks/
 - `push block-outside-dns` used by OpenVPN server to fix a potential dns leak on Windows 10
   - See https://community.openvpn.net/openvpn/ticket/605
 - `tls-cipher` limits allowable TLS ciphers to a subset that supports [**perfect forward secrecy**](https://en.wikipedia.org/wiki/Forward_secrecy)
+
   - From wikipedia:
 
-	> Forward secrecy protects past sessions against future compromises of secret keys or passwords. If forward secrecy is used, encrypted communications and sessions recorded in the past cannot be retrieved and decrypted should long-term secret keys or passwords be compromised in the future, even if the adversary actively interfered.
+  > Forward secrecy protects past sessions against future compromises of secret keys or passwords. If forward secrecy is used, encrypted communications and sessions recorded in the past cannot be retrieved and decrypted should long-term secret keys or passwords be compromised in the future, even if the adversary actively interfered.
 
 - `cipher` set to `AES-256-CBC` by default
 - `2048` bit RSA key size by default.
   - This can be increased to `4096` by changing `openvpn_key_size` in [`defaults/main.yml`](playbooks/roles/openvpn/defaults/main.yml) if you don't mind extra processing time. Consensus seems to be that 2048 is sufficient for all but the most sensitive data.
 
 ### OpenVPN client configuration
+
 For the full client configuration, see [`client_common.ovpn.j2`](playbooks/roles/add_clients/templates/client_common.ovpn.j2)
+
 - `verify-x509-name` prevents MitM attacks by verifying the server name in the supplied certificate matches the clients configuration.
 - `persist-tun` prevents the traffic from leaking out over the default interface during interruptions and reconnection attempts by keeping the tun device up until connectivity is restored.
 
 ### PKI
+
 - [easy-rsa](https://github.com/OpenVPN/easy-rsa) is used to manage the public key infrastructure.
-- OpenVPN is configured to read the CRL generated by *easy-rsa* so that a single client's access can be revoked without having to reissue credentials to all of the clients.
+- OpenVPN is configured to read the CRL generated by _easy-rsa_ so that a single client's access can be revoked without having to reissue credentials to all of the clients.
 - The private keys generated for the clients and CA are all protected with a randomly generated passphrase to facilitate secure distribution to client devices.
 
 ### Firewall
@@ -238,43 +253,3 @@ Credentials are generated during the install process and are saved as yml format
 # Contributing
 
 Contributions via pull request, feedback, bug reports are all welcome.
-
-## How to develop using Docker
-
-1. Generate ssh keypair
-```
-ssh-keygen -t rsa -f ./test/id_rsa -q -N ""
-```
-
-2. Set environment variables, you can change these to target different distributions, see the `matrix` section of the [Travis build file](./.travis.yml).
-```
-export docker_concurrent_containers=1;
-export distribution=debian; export version=8.7;
-export docker_build_image=yes;
-export run_opts='--detach --privileged -p 11194:1194/udp --volume=/sys/fs/cgroup:/sys/fs/cgroup';
-export init=/bin/systemd;
-export ssh=ssh;
-```
-
-3. Create vars directories and copy variables
-```
-mkdir test/host_vars test/group_vars
-cp inventories/sample/group_vars/all.yml test/group_vars/all.yml
-```
-
-4. Create the container(s)
-```
-./test/docker-setup.sh
-```
-Now we have a Debian container running, that has systemd and ssh installed.
-You could set up a whole bunch of containers this way and test multi-host configurations.
-
-5. Install OpenVPN
-  
-We can now run the `install.yml` playbook.
-```
-ansible-playbook playbooks/install.yml --diff --private-key test/id_rsa -i test/docker-inventory -e "load_iptables_rules=true" -e "openvpn_key_size=1024" -e "@test/ansible-vars/01_install_${distribution}.yml"
-```
-
-You can run all other playbooks as well now.
-Try connecting to the OpenVPN at UDP port 11194 (IPv4) after adding some clients.
