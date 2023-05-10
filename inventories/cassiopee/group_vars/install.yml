@@ -1,0 +1,24 @@
+easyrsa_dn_mode_cn_only: True
+openvpn_server_common_name_manual: "TSP-VPN"
+
+openvpn_instances:
+  - {
+      proto: tcp,
+      port: 443,
+      mask: "10.8.0.0 255.255.255.0",
+      cidr: "10.8.0.0/24",
+      server_extra_options:
+        [
+          'push "redirect-gateway def1 bypass-dhcp"',
+          'push "dhcp-option DNS 208.67.222.222"',
+          'push "dhcp-option DNS 208.67.220.220"',
+        ],
+      client_extra_options: [],
+    }
+
+openvpn_key_country: "FR"
+openvpn_key_province: "Ile-De-France"
+openvpn_key_city: "Evry"
+openvpn_key_org: "TSP"
+openvpn_key_ou: "TSP"
+openvpn_key_email: "test@tsp.eu"
