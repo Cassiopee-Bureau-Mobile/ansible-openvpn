@@ -20,4 +20,4 @@
     - openvpn
 #
 # ========================================================
-# sudo ansible-playbook playbooks/install.yml -i inventories/cassiopee/hosts.ini
+# sudo ansible-playbook playbooks/install.yml -i inventories/cassiopee/hosts.ini -e '@vars/install.yml'
