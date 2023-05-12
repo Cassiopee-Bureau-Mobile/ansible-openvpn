@@ -1,8 +1,10 @@
 # This Repo is only for private use because it fit with specific needs.
 
 I made some changes to the original repo to fit my needs. I will try to keep it up to date with the original repo.
+
 I also remove the `sync_clients.yml` playbook because I don't need it.
-I add become to the playbooks because I run it on a fresh installed system.
+
+I add `become` to the playbooks because I run it on a fresh installed system.
 
 # ansible-openvpn
 
@@ -66,7 +68,7 @@ Copy the sample Ansible inventory and variables to edit for your setup. (I will 
 Edit the inventory hosts (`hosts.ini`) to target your desired host. You can also change the [configuration variables](#configuration-variables) in (`group_vars/all.yml`), the defaults are however sufficient for this quickstart example.
 It is also possible to [target multiple hosts each using different variables](#targeting-multiple-hosts).
 
-OpenVPN requires some firewall rules to forward packets. By default firewall rules will be written/altered.  
+OpenVPN requires some firewall rules to forward packets. By default firewall **NO** rules will be written/altered.  
 However you can set `load_iptables_rules` to `true` and a [generated script](./playbooks/roles/openvpn/templates/etc_iptables_rules.v4.j2), that you can find at `/etc/openvpn/openvpn_iptables_rules.sh` on the host (after installation finished) will load the minimum required rules into ip(v4)tables. If you opt to not do this you can set the firewall rules by hand. OpenVPN will need at least the `MASQUERADE` rule from that script to work.
 
 Run the install playbook
@@ -74,26 +76,6 @@ Run the install playbook
     ansible-playbook -i inventories/my_project/hosts.ini playbooks/install.yml
 
 The OpenVPN server is now up and running. Time to add some clients.
-
-## Client state syncing
-
-When you run the `sync_clients.yml` playboook it will sync the desired state (which clients are in the `valid_clients` list, by default "phone" and "laptop") with the current state (which clients are currently valid on the OpenVPN host).  
-Clients that are not desired but currently valid will be revoked.  
-Clients that are desired but currently not present on the OpenVPN host will be created/added.  
-**NOTE**: Once you revoke a client, it is NOT possible to make it valid again, so I suggest using somewhat unique names as `valid_clients`.
-
-By default once you run the `sync_clients.yml` playbook it will first tell you which clients it will add and revoke before doing it, you will have to manually confirm before it proceeds. You can disable this prompt by setting `prompt_before_syncing_clients` to `false`.
-
-    ansible-playbook playbooks/sync_clients.yml -i inventories/my_project/hosts.ini
-
-After the playbook finished, the credentials will be in the `fetched_creds/` directory after the playbook finished succesfully.  
-You'll be prompted for the private key passphrase, this is stored in a file ending in `.txt` in the client directory you just entered in the step above.  
-Try connecting to the OpenVPN server:
-
-    cd fetched_creds/[inventory_hostname]/[client name]/
-    openvpn [client name]-pki-embedded.ovpn
-
-With the `sync_clients.yml` playbook you can maintain state of your clients, even on different hosts, see [Targeting multiple hosts](#targeting-multiple-hosts) and [State Management](#How-to-manage-state).
 
 ## Adding clients manually
 
@@ -112,6 +94,8 @@ You'll be prompted for the private key passphrase, this is stored in a file endi
 
 Three different OpenVPN configuration files are provided because OpenVPN clients on different platforms have different requirements for how the PKI information is referenced by the .ovpn file. This is just for convenience. All the configuration information and PKI info is the same, it's just formatted differently to support different OpenVPN clients.
 
+All those files are stored in the `fetched_creds/[inventory_hostname]/[client name]/data` directory.
+
 - **PKI embedded** - the easiest if your client supports it. Only one file required and all the PKI information is embedded.
   - `XYZ-pki-embedded.ovpn`
 - **PKCS#12** - all the PKI information is stored in the PKCS#12 file and referenced by the config. This can be more secure on Android where the OS can store the information in the PKCS#12 file in hardware backed encrypted storage.
@@ -123,19 +107,13 @@ Three different OpenVPN configuration files are provided because OpenVPN clients
   - `XYZ.key` - client private key
   - `XYZ.pem` - client certificate
 
-All private keys (embedded in config, pkcs, and .key) are encrypted with a passphrase to facilitate secure distribution to client devices.
-
-For maximum security when copying the PKI files and configs to client devices don't copy the .txt file containing the randomly generated passphrase. Enter the passphrase manually onto the device after the key has been transferred.
+You can find the embedded openvpn config under `fetched_creds/[inventory_hostname]/[client name]/[client_name].ovpn` directory.
 
 ### Private key passphrases
 
-Entering a pass phrase every time the client is started can be annoying. There are a few options to make this less burdensome after the keys have been securely distributed to the client devices.
+Entering a pass phrase every time the client is started can be annoying.
 
-1. When starting the client, use `openvpn --config [config] --askpass [pass.txt]` if you don't want to enter the password for the private key
-
-From the OpenVPN man page:
-
-> If file is specified, read the password from the first line of file. Keep in mind that storing your password in a file to a certain extent invalidates the extra security provided by using an encrypted key.
+The encryption of the private key as been removed to delete the need to enter a passphrase every time the client is started.
 
 ### Adding clients using a CSR
 
@@ -189,15 +167,9 @@ Further reading: [Ansible variable documentation, especially section: "Precedenc
 
 This also comes in handy when managing clients with the `sync_clients.yml` playbook because you can then configure which clients are valid on a per-host or per-group basis.
 
-## How to manage state
-
-You can use this to manage state by committing and continously updating configuration, especially for client syncing.
-There are different approaches you can take, here are two suggestions:
-
-- Manage all configuration files (all `inventories/` files) on a separate location, e.g. inside of [Jenkins](https://wiki.jenkins.io/display/JENKINS/Config+File+Provider+Plugin) and once these change, trigger a run of the playbook(s), especially `sync_clients.yml`. Disadvantage: You can not easily run this from anywhere else since the configuration files are missing.
-- Encrypt all configuration files (e.g. using `ansible-vault`), commit them to source control and trigger a run of the playbook(s) after a new commit is pushed.
-
 ## Revoke client access manually
+
+**NOTE**: Once you revoke a client, it is NOT possible to make it valid again, so I suggest using somewhat unique names as `valid_clients`.
 
 To revoke clients access, you can run the `revoke_clients.yml` playbook. It needs a list named `clients_to_revoke`, see [the file used for the tests](./test/ansible-vars/03_revoke_clients.yml) on how this looks like.
 
