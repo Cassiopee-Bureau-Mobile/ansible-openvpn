@@ -25,7 +25,7 @@ openvpn_key_email: "test@tsp.eu"
 
 # Whether the install.yml playbook will load iptables rules.
 # If set to false you have to apply them yourself. See README section "Firewall".
-load_iptables_rules: true
+load_iptables_rules: True
 iptables_path: "/sbin/iptables"
 openvpn_path_iptables_rules: "{{ openvpn_path }}/openvpn_iptables_rules.sh"
 
