@@ -1,7 +1,8 @@
 - name: Restart OpenVPN
   # ========================================================
   hosts: "{{ cmd_hosts | default('openvpn') }}"
-  become: true
+  become: "{{ cmd_become | default('true') }}"
+  ignore_errors: "{{ cmd_ignore_errors | default('false') }}"
 
   roles:
     - restart
